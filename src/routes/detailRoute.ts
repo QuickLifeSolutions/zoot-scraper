@@ -26,30 +26,36 @@ export const detailRoute = async (context: CheerioCrawlingContext) => {
     const state = await crawler.useState<CrawleeState>();
 
     if (state.remainingItems <= 0) {
+        log.debug('Skipping product detail because maxItems threshold reached.', { url });
         return;
     }
 
-    state.remainingItems--;
+    state.remainingItems = Math.max(0, state.remainingItems - 1);
 
-    const images = parseImageLinks($);
+    const images = parseImageLinks($, url);
     const sizes = parseSizes($);
 
-    await Actor.pushData({
-        url,
-        name: title.replace(/ \| ZOOT.+$/i, ''),
-        priceCurrency: parseCurrency($),
-        currentBestPrice: parseCurrentPrice($),
-        originalPrice: parseOriginalPrice($),
-        saleCode: $(SALE_CODE_SEL).text() || null,
-        thumbnail: images[0] || null,
-        images,
-        brand: parseBrand($, url),
-        breadcrumbs: parseBreadcrumbs($, url),
-        description: $(DESCRIPTION_SEL).text().trim() || null,
-        attributes: url.match(/zoot.ro/i) ? parseRoLayoutAttributes($) : parseCzSkLayoutAttributes($),
-        sizes,
-        available: sizes.filter((size) => size.available).length > 0,
-    });
+    try {
+        await Actor.pushData({
+            url,
+            name: title.replace(/ \| ZOOT.+$/i, ''),
+            priceCurrency: parseCurrency($),
+            currentBestPrice: parseCurrentPrice($),
+            originalPrice: parseOriginalPrice($),
+            saleCode: $(SALE_CODE_SEL).text() || null,
+            thumbnail: images[0] || null,
+            images,
+            brand: parseBrand($, url),
+            breadcrumbs: parseBreadcrumbs($, url),
+            description: $(DESCRIPTION_SEL).text().trim() || null,
+            attributes: url.match(/zoot.ro/i) ? parseRoLayoutAttributes($) : parseCzSkLayoutAttributes($),
+            sizes,
+            available: sizes.some((size) => size.available),
+        });
+    } catch (error) {
+        log.exception(error as Error, 'Failed to push product record to dataset', { url });
+        throw error;
+    }
 };
 
 const parseCurrentPrice = ($: CheerioRoot) => {
@@ -109,12 +115,21 @@ const parseCurrency = ($: CheerioRoot) => {
         || null;
 };
 
-const parseImageLinks = ($: CheerioRoot) => {
+const parseImageLinks = ($: CheerioRoot, url: string) => {
+    const baseUrl = new URL(url).origin;
+
     const imageLinks = $(GALLERY_IMAGES_SEL)
         .map((_i, el) => $(el).attr('src') || $(el).attr('href') || '')
         .toArray()
         .filter((link) => link)
-        .map((link) => link.replace(/^[/]+/, 'https://'));
+        .map((link) => {
+            try {
+                return new URL(link, baseUrl).toString();
+            } catch {
+                return null;
+            }
+        })
+        .filter((link): link is string => Boolean(link));
 
     const largeImageLinks = imageLinks.map(
         (link) => link.replace(/fit\/[^/]+\//i, 'fit/1908x2562/'),
@@ -128,7 +143,7 @@ const parseBreadcrumbs = ($: CheerioRoot, url: string) => {
 
     return $(BREADCRUMBS_SEL).map((_i, el) => ({
         text: $(el).text().trim() || null,
-        url: `${urlOrigin}${$(el).attr('href')}`,
+        url: buildAbsoluteUrl($(el).attr('href'), urlOrigin),
     })).toArray();
 };
 
@@ -183,11 +198,23 @@ const parseSizes = ($: CheerioRoot) => {
 const parseBrand = ($: CheerioRoot, url: string) => {
     const { origin } = new URL(url);
 
-    const link = `${origin}${$(BRAND_SEL).attr('href')}`;
-    const logo = $(BRAND_SEL).find('img[src]').attr('src') || null;
+    const link = buildAbsoluteUrl($(BRAND_SEL).attr('href'), origin);
+    const logo = buildAbsoluteUrl($(BRAND_SEL).find('img[src]').attr('src'), origin);
     const name = $(BRAND_SEL).text().trim();
 
     return url.match(/zoot.ro/i)
         ? { link, name }
         : { link, logo };
+};
+
+const buildAbsoluteUrl = (pathname: string | undefined | null, origin: string) => {
+    if (!pathname) {
+        return null;
+    }
+
+    try {
+        return new URL(pathname, origin).toString();
+    } catch {
+        return null;
+    }
 };

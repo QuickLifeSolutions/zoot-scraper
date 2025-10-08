@@ -1,27 +1,29 @@
 import { CheerioCrawlingContext, Request } from 'crawlee';
 import { LABELS, PRODUCT_DETAIL_URL_REGEX, PRODUCT_LINKS_SEL } from './constants.js';
+import { CrawleeState, NormalizedStartUrl } from './types.js';
 
-export const categorizeUrls = (urls: string[]) : Request[] => {
-    const categorizedRequests = urls.map((url) => {
-        let label = LABELS.CATEGORY;
-
-        if (url.match(PRODUCT_DETAIL_URL_REGEX)) {
-            label = LABELS.DETAIL;
-        }
+export const categorizeUrls = (startUrls: NormalizedStartUrl[]) : Request[] => {
+    return startUrls.map(({ url, label }) => {
+        const normalizedLabel = label
+            || (PRODUCT_DETAIL_URL_REGEX.test(url) ? LABELS.DETAIL : LABELS.CATEGORY);
 
         return new Request({
             url,
-            label,
+            label: normalizedLabel,
         });
     });
-
-    return categorizedRequests;
 };
 
 export const enqueueProductDetails = async (context: CheerioCrawlingContext) => {
-    const { enqueueLinks, request: { url }, log } = context;
+    const { enqueueLinks, request: { url }, log, crawler } = context;
 
-    const { processedRequests: reqs } = await enqueueLinks({
+    const state = await crawler.useState<CrawleeState>();
+    if (state.remainingItems <= 0) {
+        log.debug('Skipping product detail enqueueing because item limit was reached.', { url });
+        return;
+    }
+
+    const { processedRequests: reqs = [] } = await enqueueLinks({
         selector: PRODUCT_LINKS_SEL,
         label: LABELS.DETAIL,
         forefront: true,
@@ -32,9 +34,20 @@ export const enqueueProductDetails = async (context: CheerioCrawlingContext) => 
 };
 
 export const getCurrentPage = (url: string): number => {
-    const currentPageMatches = url.match(/\/(stranka|pagina)[/:](\d+)/) || [];
+    const pathMatch = url.match(/\/(stranka|pagina)[/:](\d+)/i);
+    if (pathMatch?.[2]) {
+        return Number.parseInt(pathMatch[2], 10);
+    }
 
-    const currentPageText = currentPageMatches[1] || '1';
+    const { searchParams } = new URL(url);
+    const explicitPage = searchParams.get('p');
 
-    return parseInt(currentPageText, 10);
+    if (explicitPage) {
+        const parsed = Number.parseInt(explicitPage, 10);
+        if (Number.isInteger(parsed) && parsed > 0) {
+            return parsed;
+        }
+    }
+
+    return 1;
 };

@@ -1,0 +1,101 @@
+{
+    "title": "Zoot Fashion Scraper",
+    "description": "Scrape product detail data from Zoot categories or individual product pages.",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "startUrls": {
+            "title": "Category or product URLs",
+            "type": "array",
+            "description": "Provide Zoot category or product detail URLs. You can mix locales (cz, ro, sk).",
+            "editor": "requestListSources",
+            "items": {
+                "type": "object",
+                "required": [
+                    "url"
+                ],
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Optional custom label to force the crawler route."
+                    }
+                }
+            },
+            "default": [
+                {
+                    "url": "https://www.zoot.cz/katalog/17504/zeny"
+                },
+                {
+                    "url": "https://www.zoot.cz/katalog/17572/muzi"
+                },
+                {
+                    "url": "https://www.zoot.cz/vse-pro-deti"
+                }
+            ]
+        },
+        "maxItems": {
+            "title": "Max items",
+            "type": "integer",
+            "minimum": 1,
+            "default": 50,
+            "description": "Stop the crawl after this many product detail records are stored."
+        },
+        "maxRequestsPerCrawl": {
+            "title": "Max requests per crawl",
+            "type": "integer",
+            "minimum": 1,
+            "description": "Hard stop for the number of HTTP requests (category + product pages). Leave empty for unlimited."
+        },
+        "maxConcurrency": {
+            "title": "Max concurrency",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "default": 2,
+            "description": "Number of parallel HTTP requests. Lower this to be gentle with the target site."
+        },
+        "minRequestIntervalSecs": {
+            "title": "Minimum delay between requests (s)",
+            "type": "number",
+            "minimum": 0,
+            "default": 1,
+            "description": "Minimum random delay (in seconds) between finished requests."
+        },
+        "maxRequestIntervalSecs": {
+            "title": "Maximum delay between requests (s)",
+            "type": "number",
+            "minimum": 0,
+            "default": 3,
+            "description": "Maximum random delay (in seconds) between finished requests."
+        },
+        "navigationTimeoutSecs": {
+            "title": "Navigation timeout (s)",
+            "type": "integer",
+            "minimum": 5,
+            "default": 45,
+            "description": "Fail the request if the page does not load within this timeframe."
+        },
+        "requestHandlerTimeoutSecs": {
+            "title": "Request handler timeout (s)",
+            "type": "integer",
+            "minimum": 5,
+            "default": 60,
+            "description": "Maximum time to process each request before timing out."
+        },
+        "proxyConfiguration": {
+            "title": "Proxy configuration",
+            "type": "object",
+            "editor": "proxy",
+            "description": "Use Apify proxy or bring your own. The scraper falls back to direct connections if credentials are missing.",
+            "default": {
+                "useApifyProxy": true
+            }
+        }
+    },
+    "required": [],
+    "additionalProperties": false
+}

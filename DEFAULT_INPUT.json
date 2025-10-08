@@ -1,0 +1,16 @@
+{
+    "startUrls": [
+        {
+            "url": "https://www.zoot.cz/katalog/17504/zeny"
+        }
+    ],
+    "maxItems": 50,
+    "maxConcurrency": 2,
+    "minRequestIntervalSecs": 1,
+    "maxRequestIntervalSecs": 3,
+    "navigationTimeoutSecs": 45,
+    "requestHandlerTimeoutSecs": 60,
+    "proxyConfiguration": {
+        "useApifyProxy": true
+    }
+}

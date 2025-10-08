@@ -1,0 +1,88 @@
+{
+    "title": "Zoot Product Dataset Item",
+    "type": "object",
+    "properties": {
+        "url": { "type": "string", "format": "uri" },
+        "name": { "type": "string" },
+        "priceCurrency": { "type": ["string", "null"] },
+        "currentBestPrice": {
+            "type": "object",
+            "properties": {
+                "value": { "type": ["number", "null"] },
+                "formattedPrice": { "type": ["string", "null"] }
+            },
+            "required": ["value", "formattedPrice"]
+        },
+        "originalPrice": {
+            "type": "object",
+            "properties": {
+                "value": { "type": ["number", "null"] },
+                "formattedPrice": { "type": ["string", "null"] }
+            },
+            "required": ["value", "formattedPrice"]
+        },
+        "saleCode": { "type": ["string", "null"] },
+        "thumbnail": { "type": ["string", "null"], "format": "uri" },
+        "images": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+        },
+        "brand": {
+            "type": ["object", "null"],
+            "properties": {
+                "link": { "type": ["string", "null"], "format": "uri" },
+                "logo": { "type": ["string", "null"], "format": "uri" },
+                "name": { "type": ["string", "null"] }
+            }
+        },
+        "breadcrumbs": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "text": { "type": ["string", "null"] },
+                    "url": { "type": ["string", "null"], "format": "uri" }
+                },
+                "required": ["text", "url"]
+            }
+        },
+        "description": { "type": ["string", "null"] },
+        "attributes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "key": { "type": ["string", "null"] },
+                    "value": { "type": ["string", "null"] }
+                },
+                "required": ["key", "value"]
+            }
+        },
+        "sizes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "size": { "type": ["string", "null"] },
+                    "available": { "type": "boolean" },
+                    "note": { "type": ["string", "null"] }
+                },
+                "required": ["size", "available", "note"]
+            }
+        },
+        "available": { "type": "boolean" }
+    },
+    "required": [
+        "url",
+        "name",
+        "currentBestPrice",
+        "originalPrice",
+        "images",
+        "brand",
+        "breadcrumbs",
+        "attributes",
+        "sizes",
+        "available"
+    ],
+    "additionalProperties": false
+}

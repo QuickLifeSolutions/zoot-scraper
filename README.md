@@ -1,69 +1,102 @@
+# Zoot Fashion Product Scraper
 
-```markdown
-# CodeMaster Zoot Scraper
+Collect structured product data from the Zoot fashion storefronts (cz/sk/ro) with pagination, rate limiting, and robust input validation. This actor is ready for production on the Apify platform or in your own automation pipelines.
 
-## Overview
+## Quick Start
 
-The CodeMaster Zoot Scraper is an advanced tool designed to automate data extraction from Zoot, a leading fashion retail website in the Czech Republic, Slovakia, and Romania. This scraper allows users to efficiently harvest detailed product information, streamlining market research and competitive analysis.
+1. **Deploy** the actor (Apify console → *Actors* → *Create new* → upload this repo).
+2. **Review input** – defaults crawl the Czech women’s category and stop after 50 products.
+3. **Run** the actor. The dataset will populate with products containing price, brand, sizes, availability, imagery, breadcrumbs, and attributes.
+4. **Export** results via dataset UI or API (`JSON`, `CSV`, `XLSX`, etc.).
 
-## Features
+## Apify Console Flow
 
-- **Custom Product Queries**: Input specific product URLs or search criteria to extract data directly from Zoot's product pages.
-- **Comprehensive Data Extraction**: Gather key product details such as name, brand, price, sizes, and more.
-- **Highly Configurable**: Adjust scraper settings to handle dynamic site content or to wait for specific elements before extraction begins.
+1. Open the actor → *Input* tab.
+2. Adjust `startUrls`, limits, and proxy settings; leave defaults for a quick smoke test.
+3. Run the actor. Live logs surface pagination progress and remaining quota.
+4. Inspect the dataset items, download exports, or connect webhooks under *Integrations*.
 
-## Getting Started
+## API & Automation
 
-Configure the scraper with URLs or search criteria, and customize settings to suit your data needs:
+- **Run via API**: `POST https://api.apify.com/v2/acts/<user>/<actor-name>/runs?token=...` with an input body matching the schema below.
+- **Monitor status**: Poll the run `GET .../runs/<run-id>` or subscribe to webhooks.
+- **Consume dataset**: `GET .../datasets/<dataset-id>/items?format=json&clean=1`.
+- Integrate with Zapier, Make, or your CI/CD to trigger new crawls when inventory changes.
 
-### Example Input
+## Local Development
+
+```bash
+npm install
+npm run start:dev      # Run TypeScript directly
+npm run build          # Emit JS to dist/
+npm run start:prod     # Execute compiled build
+npm run lint           # Static analysis
+```
+
+Optional: populate the `storage` folder with session state or tweak `DEFAULT_INPUT.json` (bundled in the repo) for iterative tests. The included default input works with the bundled selectors and rate limits.
+
+## Input Parameters
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `startUrls` | array of `{ url, label? }` | 3 core category URLs | Category or product detail URLs. Labels override auto-routing (`CATEGORY`, `DETAIL`). |
+| `maxItems` | integer | 50 | Stop after this many product records reach the dataset. |
+| `maxRequestsPerCrawl` | integer | – | Global ceiling for HTTP requests (useful when estimating traffic). |
+| `maxConcurrency` | integer (1–10) | 2 | Parallel requests. Lowering reduces load on Zoot, raising speeds up large crawls. |
+| `minRequestIntervalSecs` | number | 1 | Minimum random delay between completed requests. Set to 0 to disable throttling. |
+| `maxRequestIntervalSecs` | number | 3 | Maximum random delay between completed requests. Must be ≥ `minRequestIntervalSecs`. |
+| `navigationTimeoutSecs` | integer | 45 | Abort navigation if the response stalls longer than this. |
+| `requestHandlerTimeoutSecs` | integer | 60 | Abort the page handler when processing exceeds this limit. |
+| `proxyConfiguration` | Apify proxy payload | `{ useApifyProxy: true }` | Use Apify proxy groups or custom proxy URLs. The actor automatically falls back to direct connections if credentials are missing. |
+
+Refer to `INPUT_SCHEMA.json` for the full specification and console editor hints.
+
+## Output Schema
+
+Each dataset item resembles:
 
 ```json
 {
-    "urls": [
-        "https://www.zoot.cz/polozka/3123456/elegant-dress"
-    ],
-    "waitForSelector": ".product-description"
+  "url": "https://www.zoot.cz/polozka/1234567/stylish-jacket",
+  "name": "Stylish Jacket",
+  "priceCurrency": "CZK",
+  "currentBestPrice": { "value": 2199, "formattedPrice": "2 199 Kč" },
+  "originalPrice": { "value": 2999, "formattedPrice": "2 999 Kč" },
+  "saleCode": "WEEKEND10",
+  "thumbnail": "https://images.zoot.cz/fit/1908x2562/...",
+  "images": ["https://...", "..."],
+  "brand": { "link": "https://www.zoot.cz/brand/only", "logo": "https://..." },
+  "breadcrumbs": [
+    { "text": "Ženy", "url": "https://www.zoot.cz/katalog/17504/zeny" }
+  ],
+  "description": "Lightweight jacket ideal for spring.",
+  "attributes": [
+    { "key": "Material", "value": "100 % polyester" }
+  ],
+  "sizes": [
+    { "size": "S", "available": true, "note": null }
+  ],
+  "available": true
 }
 ```
 
-### Example Output
+See `OUTPUT_SCHEMA.json` for official typings if you need to ingest data into typed consumers.
 
-```json
-{
-    "id": "3123456",
-    "url": "https://www.zoot.cz/polozka/3123456/elegant-dress",
-    "name": "Elegant Dress",
-    "brand": "Trendy Brand",
-    "price": "2 500 Kč",
-    "sizesAvailable": ["XS", "S", "M"],
-    "description": "Elegant evening dress perfect for special occasions.",
-    "images": [
-        "https://image.zoot.cz/example/dress_front_3123456.jpeg",
-        "https://image.zoot.cz/example/dress_back_3123456.jpeg"
-    ],
-    "categoryPath": ["Home", "Women", "Dresses", "Evening Dresses"]
-}
-```
+## Dataset Handling
 
-## Integrations
+- Use dataset exports for downstream analytics (`CSV` for BI tools, `JSONL` for pipelines).
+- Attach a `dataset` webhook to stream items to webhooks, queues, or storage buckets in near real-time.
+- Need historical comparisons? Configure dataset to append (`keepUrlFragment=true`) and manage TTL via Apify dataset settings.
 
-Seamlessly integrate scraped data with your systems using Apify SDK or connect through popular platforms like Zapier for automation.
+## Troubleshooting
 
-## Support and Updates
+- **Auth/Proxy missing**: The actor logs a warning and proceeds without the Apify proxy. Supply valid credentials to avoid IP-based throttling.
+- **Empty results**: Confirm your `startUrls` are full category or product URLs. Private or filtered pages may require cookies/session handling.
+- **Slow runs**: Increase `maxConcurrency` cautiously and reduce request delays once you verify stability.
+- **Blocked requests**: Consider residential proxy groups or longer delays between requests; capture log lines for support.
 
-For support inquiries, feature requests, or updates, please reach out through our dedicated channels.
+## Support
 
----
-
-**Connect with Quick Life Solutions**:
-- **YouTube**: [Visit our channel](https://www.youtube.com/channel/UCSglWXooehH8Cy7LYHhXtqA)
-- **Instagram**: [Follow us on Instagram](https://www.instagram.com/quicklifesolutionsofficial/)
-- **AI Newsletter**: [Subscribe to our newsletter](https://sendfox.com/quicklifesolutions)
-- **Free Consultation**: [Book a free consultation call](https://tidycal.com/quicklifesolutions/free-consultation)
-- **More Tools**: [Explore our Apify actors](https://apify.com/dainty_screw)
-- **Discord**: [Raise a Support ticket here](https://discord.gg/2WGj2PDmHb)
-- **Contact Email**: [codemasterdevops@gmail.com](mailto:codemasterdevops@gmail.com)
-
-Harness the power of web scraping to enhance your business strategy with the CodeMaster Zoot Scraper. Start extracting valuable fashion retail data today!
-```
+- Issues & enhancements: open a GitHub issue or email [codemasterdevops@gmail.com](mailto:codemasterdevops@gmail.com).
+- Priority support & automation consulting: [Quick Life Solutions](https://apify.com/dainty_screw).
+- Community chat & troubleshooting: [Discord](https://discord.gg/2WGj2PDmHb) and [YouTube tutorials](https://www.youtube.com/channel/UCSglWXooehH8Cy7LYHhXtqA).
