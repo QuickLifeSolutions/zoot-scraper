@@ -28,6 +28,6 @@
 		"lint:fix": "eslint ./src --ext .ts --fix",
 		"test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1"
 	},
-	"author": "It's not you it's me",
+	"author": "codemasterdevops",
 	"license": "ISC"
 }
