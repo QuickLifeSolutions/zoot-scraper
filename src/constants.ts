@@ -4,13 +4,13 @@ export const LABELS = {
     DETAIL: 'DETAIL',
 };
 
-export const PRODUCT_DETAIL_URL_REGEX = /\/(polozka|articol|detaliu)/i;
+export const PRODUCT_DETAIL_URL_REGEX = /\/(polozka|detail-vyrobku|articol|detaliu)/i;
 
-const CZ_SK_PRODUCT_LINKS_SEL = 'h3.b-product__title a[href^="/polozka"]';
+const COMMON_PRODUCT_LINKS_SEL = 'a.b-product__link[href], h3.b-product__title a[href*="/polozka"], h3.b-product__title a[href*="/detail-"]';
 const RO_PRODUCT_LINKS_SEL = '.product__link[href]';
 
 export const PRODUCT_LINKS_SEL = [
-    CZ_SK_PRODUCT_LINKS_SEL,
+    COMMON_PRODUCT_LINKS_SEL,
     RO_PRODUCT_LINKS_SEL,
 ].join(' , ');
 

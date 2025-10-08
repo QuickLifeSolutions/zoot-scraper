@@ -34,7 +34,7 @@ export const enqueueProductDetails = async (context: CheerioCrawlingContext) => 
 };
 
 export const getCurrentPage = (url: string): number => {
-    const pathMatch = url.match(/\/(stranka|pagina)[/:](\d+)/i);
+    const pathMatch = url.match(/\/(stranka|strana|pagina)[/:](\d+)/i);
     if (pathMatch?.[2]) {
         return Number.parseInt(pathMatch[2], 10);
     }
