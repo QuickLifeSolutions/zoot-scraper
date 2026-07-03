@@ -242,6 +242,8 @@ const parsePriceValue = (priceText: string): number | null => {
             : valueText.replace(/,/g, '');
     } else if (valueText.includes(',')) {
         valueText = valueText.replace(/,/g, '.');
+    } else if (/^\d{1,3}(\.\d{3})+$/.test(valueText)) {
+        valueText = valueText.replace(/\./g, '');
     }
 
     return valueText ? parseFloat(valueText) : null;
