@@ -218,7 +218,7 @@ const inferBrandName = (
 };
 
 const parseSizeLabel = (sizeWithNote: string): { size: string; note: string } => {
-    const [, baseBeforeDash, dashNote] = sizeWithNote.match(/^(.+?)\s*-\s*(.+)$/) || [];
+    const [, baseBeforeDash, dashNote] = sizeWithNote.match(/^(.+?)(?:\s+-\s*|-\s+)(.+)$/) || [];
     const base = (baseBeforeDash || sizeWithNote).trim();
     const [, sizeBeforeParen, parenNote] = base.match(/^(.+?)\s*\((.+)\)$/) || [];
     const notes = [parenNote, dashNote]

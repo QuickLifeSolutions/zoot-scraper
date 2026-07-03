@@ -115,6 +115,8 @@ const load = (html: string) => cheerio.load(html);
             <option>24/32 (na objednávku)</option>
             <option disabled>30/32 (vyprodáno)</option>
             <option>L - poslední kus</option>
+            <option>XS-S</option>
+            <option disabled>32-34</option>
             <option disabled>35 1/2 (na cedulce 35,5)- vyprodáno</option>
         </select>
     `);
@@ -123,6 +125,8 @@ const load = (html: string) => cheerio.load(html);
         { size: '24/32', available: true, note: 'na objednávku' },
         { size: '30/32', available: false, note: 'vyprodáno' },
         { size: 'L', available: true, note: 'poslední kus' },
+        { size: 'XS-S', available: true, note: undefined },
+        { size: '32-34', available: false, note: undefined },
         { size: '35 1/2', available: false, note: 'na cedulce 35,5; vyprodáno' },
     ]);
 }
