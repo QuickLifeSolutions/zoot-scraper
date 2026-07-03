@@ -1,29 +1,30 @@
 import { Actor } from 'apify';
 import { CheerioCrawler, CheerioCrawlingContext } from 'crawlee';
-import { InputSchema, CrawleeState } from './types.js';
+import { CrawleeState, InputSchema } from './types.js';
 import { categorizeUrls } from './utils.js';
 import { router } from './routes/router.js';
+import { normalizeInput } from './config.js';
 
 await Actor.init();
 
-const {
-    startUrls = [
-        'https://www.zoot.cz/katalog/17504/zeny',
-        'https://www.zoot.cz/katalog/17572/muzi',
-        'https://www.zoot.cz/vse-pro-deti',
-    ],
-    proxyConfiguration: proxyConfig = {
-        useApifyProxy: true,
-    },
-    maxItems = Number.MAX_SAFE_INTEGER,
-} = await Actor.getInput<InputSchema>() ?? {};
+const input = normalizeInput(await Actor.getInput<InputSchema>() ?? {});
 
-const proxyConfiguration = await Actor.createProxyConfiguration(proxyConfig);
+const proxyConfiguration = await Actor.createProxyConfiguration(input.proxyConfiguration);
+
+const randomDelay = async (minSecs: number, maxSecs: number) => {
+    if (maxSecs <= 0) return;
+
+    const delaySecs = minSecs + Math.random() * (maxSecs - minSecs);
+    await new Promise((resolve) => { setTimeout(resolve, delaySecs * 1000); });
+};
 
 const crawler = new CheerioCrawler({
     proxyConfiguration,
     requestHandler: router,
-    navigationTimeoutSecs: 45,
+    maxConcurrency: input.maxConcurrency,
+    maxRequestsPerCrawl: input.maxRequestsPerCrawl,
+    navigationTimeoutSecs: input.navigationTimeoutSecs,
+    requestHandlerTimeoutSecs: input.requestHandlerTimeoutSecs,
     preNavigationHooks: [
         async (context: CheerioCrawlingContext) => {
             const { crawler: cheerioCrawler, log } = context;
@@ -32,17 +33,21 @@ const crawler = new CheerioCrawler({
             if (state.remainingItems <= 0) {
                 log.info('Reached max items limit, aborting the run');
                 await cheerioCrawler.autoscaledPool?.abort();
+                return;
             }
+
+            await randomDelay(input.minRequestIntervalSecs, input.maxRequestIntervalSecs);
         },
     ],
 });
 
 await crawler.useState<CrawleeState>({
-    remainingItems: maxItems,
+    remainingItems: input.maxItems,
+    maxItems: input.maxItems,
 });
 
 await crawler.run(
-    categorizeUrls(startUrls),
+    categorizeUrls(input.startUrls),
 );
 
 await Actor.exit();

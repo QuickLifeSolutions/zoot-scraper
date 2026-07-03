@@ -22,11 +22,11 @@
 	"scripts": {
 		"start": "npm run start:dev",
 		"start:prod": "node dist/main.js",
-		"start:dev": "ts-node-esm -T src/main.ts",
+		"start:dev": "node --loader ts-node/esm src/main.ts",
 		"build": "tsc",
 		"lint": "eslint ./src --ext .ts",
 		"lint:fix": "eslint ./src --ext .ts --fix",
-		"test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1"
+		"test": "node --loader ts-node/esm tests/productParsers.test.ts && node --loader ts-node/esm tests/crawlBudget.test.ts"
 	},
 	"author": "It's not you it's me",
 	"license": "ISC"

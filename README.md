@@ -1,69 +1,129 @@
-
-```markdown
 # CodeMaster Zoot Scraper
 
-## Overview
+Collect structured product data from Zoot fashion storefronts in the Czech Republic, Slovakia, and Romania.
 
-The CodeMaster Zoot Scraper is an advanced tool designed to automate data extraction from Zoot, a leading fashion retail website in the Czech Republic, Slovakia, and Romania. This scraper allows users to efficiently harvest detailed product information, streamlining market research and competitive analysis.
+Supported domains:
 
-## Features
+- `zoot.cz`
+- `zoot.sk`
+- `zoot.ro`
 
-- **Custom Product Queries**: Input specific product URLs or search criteria to extract data directly from Zoot's product pages.
-- **Comprehensive Data Extraction**: Gather key product details such as name, brand, price, sizes, and more.
-- **Highly Configurable**: Adjust scraper settings to handle dynamic site content or to wait for specific elements before extraction begins.
+The default input is intentionally small so public trial runs finish quickly and avoid queueing hundreds of pagination pages.
 
-## Getting Started
-
-Configure the scraper with URLs or search criteria, and customize settings to suit your data needs:
-
-### Example Input
+## Quick start
 
 ```json
 {
-    "urls": [
-        "https://www.zoot.cz/polozka/3123456/elegant-dress"
+    "startUrls": [
+        "https://www.zoot.cz/katalog/17504/zeny"
     ],
-    "waitForSelector": ".product-description"
+    "maxItems": 25,
+    "maxRequestsPerCrawl": 100,
+    "maxConcurrency": 2,
+    "proxyConfiguration": {
+        "useApifyProxy": true
+    }
 }
 ```
 
-### Example Output
+For a very small smoke test:
 
 ```json
 {
-    "id": "3123456",
-    "url": "https://www.zoot.cz/polozka/3123456/elegant-dress",
-    "name": "Elegant Dress",
-    "brand": "Trendy Brand",
-    "price": "2 500 Kč",
-    "sizesAvailable": ["XS", "S", "M"],
-    "description": "Elegant evening dress perfect for special occasions.",
+    "startUrls": [
+        "https://www.zoot.cz/katalog/17504/zeny"
+    ],
+    "maxItems": 2,
+    "maxRequestsPerCrawl": 20,
+    "maxConcurrency": 1,
+    "proxyConfiguration": {
+        "useApifyProxy": true
+    }
+}
+```
+
+## Input parameters
+
+| Field | Type | Default | Description |
+|---|---|---:|---|
+| `startUrls` | string[] | one CZ women category | Category or product detail URLs. |
+| `maxItems` | integer | `25` | Maximum product records to save. |
+| `maxRequestsPerCrawl` | integer | `100` | Hard request budget for category, pagination, and detail requests. |
+| `maxConcurrency` | integer | `2` | Maximum parallel requests. |
+| `minRequestIntervalSecs` | number | `0` | Minimum random delay before requests. |
+| `maxRequestIntervalSecs` | number | `1` | Maximum random delay before requests. |
+| `navigationTimeoutSecs` | integer | `45` | Navigation timeout. |
+| `requestHandlerTimeoutSecs` | integer | `60` | Request handler timeout. |
+| `proxyConfiguration` | object | Apify Proxy enabled | Proxy settings. |
+
+## Output example
+
+```json
+{
+    "url": "https://www.zoot.cz/damske/detail-vyrobku/475078-gap-dziny-high-rise-universal-legging-washwell-gap/vse/5678:modra-modra/",
+    "name": "GAP - Džíny High Rise Universal Legging Washwell GAP",
+    "priceCurrency": "CZK",
+    "currentBestPrice": {
+        "value": 1089,
+        "formattedPrice": "1 089 Kč"
+    },
+    "originalPrice": {
+        "value": null,
+        "formattedPrice": null
+    },
+    "saleCode": null,
+    "thumbnail": "https://d010202.zoot.cz/_galerie/varianty/357/3570879-z.jpg",
     "images": [
-        "https://image.zoot.cz/example/dress_front_3123456.jpeg",
-        "https://image.zoot.cz/example/dress_back_3123456.jpeg"
+        "https://d010202.zoot.cz/_galerie/varianty/357/3570879-z.jpg"
     ],
-    "categoryPath": ["Home", "Women", "Dresses", "Evening Dresses"]
+    "brand": {
+        "link": "https://www.zoot.cz/znacka/gap",
+        "logo": null,
+        "name": "GAP"
+    },
+    "breadcrumbs": [
+        {
+            "text": "ZOOT.cz",
+            "url": "https://www.zoot.cz/"
+        }
+    ],
+    "description": "Product description when available.",
+    "attributes": [
+        {
+            "key": "Material",
+            "value": "100% cotton"
+        }
+    ],
+    "sizes": [
+        {
+            "size": "25/32",
+            "available": true,
+            "note": "na skladě"
+        }
+    ],
+    "available": true
 }
 ```
 
-## Integrations
+## Local development
 
-Seamlessly integrate scraped data with your systems using Apify SDK or connect through popular platforms like Zapier for automation.
-
-## Support and Updates
-
-For support inquiries, feature requests, or updates, please reach out through our dedicated channels.
-
----
-
-**Connect with Quick Life Solutions**:
-- **YouTube**: [Visit our channel](https://www.youtube.com/channel/UCSglWXooehH8Cy7LYHhXtqA)
-- **Instagram**: [Follow us on Instagram](https://www.instagram.com/quicklifesolutionsofficial/)
-- **AI Newsletter**: [Subscribe to our newsletter](https://sendfox.com/quicklifesolutions)
-- **Free Consultation**: [Book a free consultation call](https://tidycal.com/quicklifesolutions/free-consultation)
-- **More Tools**: [Explore our Apify actors](https://apify.com/dainty_screw)
-- **Discord**: [Raise a Support ticket here](https://discord.gg/2WGj2PDmHb)
-- **Contact Email**: [codemasterdevops@gmail.com](mailto:codemasterdevops@gmail.com)
-
-Harness the power of web scraping to enhance your business strategy with the CodeMaster Zoot Scraper. Start extracting valuable fashion retail data today!
+```bash
+npm install
+npm run build
+npm run lint
+npm test
+npm run start:dev
 ```
+
+## Troubleshooting
+
+- **Timeouts:** Lower `maxItems`, lower `maxRequestsPerCrawl`, and keep `maxConcurrency` at `1` or `2`.
+- **Empty results:** Check that the URL is a public Zoot category or product detail page.
+- **Blocked requests:** Use Apify Proxy and consider longer request delays.
+- **Missing optional fields:** Some Zoot product pages do not expose every description, attribute, or brand field. The actor emits `null` or an empty list when data is unavailable.
+
+## Support
+
+- Email: [codemasterdevops@gmail.com](mailto:codemasterdevops@gmail.com)
+- Website: [Quick Life Solutions](https://quicklifesolutions.com)
+- More actors: [dainty_screw on Apify](https://apify.com/dainty_screw)
