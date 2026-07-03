@@ -1,21 +1,35 @@
 import { CheerioCrawlingContext, CheerioRoot } from 'crawlee';
 import {
-    LABELS, PAGINATION_PAGES_SEL,
+    LABELS, PAGINATION_PAGES_SEL, PRODUCT_LINKS_SEL,
 } from '../constants.js';
+import { CrawleeState } from '../types.js';
+import { calculatePaginationLimit } from '../config.js';
 import { enqueueProductDetails, getCurrentPage } from '../utils.js';
 
 export const categoryRoute = async (context: CheerioCrawlingContext) => {
-    const { log, $, request: { url } } = context;
+    const { crawler, log, $, request: { url } } = context;
 
     const pageTitle = $('head title').text();
     log.info(`Opened category page: ${pageTitle}`, { url });
 
-    await enqueueProductDetails(context);
-    await enqueueNextPages(context);
+    const state = await crawler.useState<CrawleeState>();
+    const productLinksOnCurrentPage = $(PRODUCT_LINKS_SEL).length;
+    const productLimit = Math.max(0, Math.min(state.remainingItems, productLinksOnCurrentPage));
+
+    if (productLimit > 0) {
+        await enqueueProductDetails(context, productLimit);
+    } else if (state.remainingItems <= 0) {
+        log.info('Skipping product detail enqueue because max item budget is already exhausted', { url });
+    } else {
+        log.warning('No product detail links found on category page', { url });
+    }
+
+    await enqueueNextPages(context, productLinksOnCurrentPage);
 };
 
-const enqueueNextPages = async (context: CheerioCrawlingContext) => {
-    const { $, enqueueLinks, log, request: { url } } = context;
+const enqueueNextPages = async (context: CheerioCrawlingContext, productLinksOnCurrentPage: number) => {
+    const { crawler, $, enqueueLinks, log, request: { url } } = context;
+    const state = await crawler.useState<CrawleeState>();
 
     const currentPage = getCurrentPage(url);
 
@@ -28,7 +42,7 @@ const enqueueNextPages = async (context: CheerioCrawlingContext) => {
         return;
     }
 
-    const nextPageUrls = buildNextPageUrls($, url);
+    const nextPageUrls = buildNextPageUrls($, url, state.maxItems, productLinksOnCurrentPage);
 
     const { processedRequests } = await enqueueLinks({
         urls: nextPageUrls,
@@ -36,7 +50,6 @@ const enqueueNextPages = async (context: CheerioCrawlingContext) => {
     });
 
     const enqueuedPages = processedRequests.filter((req) => !req.wasAlreadyPresent);
-
     const lastPage = currentPage + enqueuedPages.length;
 
     log.info(
@@ -45,22 +58,36 @@ const enqueueNextPages = async (context: CheerioCrawlingContext) => {
     );
 };
 
-const buildNextPageUrls = ($: CheerioRoot, currentUrl: string) : string[] => {
+export const buildNextPageUrls = (
+    $: CheerioRoot,
+    currentUrl: string,
+    maxItems: number,
+    productLinksOnCurrentPage: number,
+) : string[] => {
     const totalPages = parseTotalPagesCount($);
+    const maxPageToCrawl = calculatePaginationLimit({
+        maxItems,
+        productLinksOnCurrentPage,
+        totalPages,
+    });
+
+    if (productLinksOnCurrentPage <= 0 || maxPageToCrawl <= 1) return [];
 
     const examplePageRelPaths = $(PAGINATION_PAGES_SEL).map(
         (_i, el) => $(el).attr('href') || $(el).text(),
     ).toArray();
 
     const lastRelPath = examplePageRelPaths[examplePageRelPaths.length - 1];
-    const examplePageLink = `${new URL(currentUrl).origin}${lastRelPath}`;
+    if (!lastRelPath) return [];
+
+    const examplePageLink = new URL(lastRelPath, new URL(currentUrl).origin).href;
 
     const nextPageUrls: string[] = [];
 
-    for (let i = 2; i <= totalPages; i++) {
+    for (let i = 2; i <= maxPageToCrawl; i++) {
         const nextPageUrl = examplePageLink
-            .replace(/stranka\/\d+/i, `stranka/${i}`)
-            .replace(/pagina:\d+/i, `pagina:${i}`);
+            .replace(/(stran(?:ka|a)[/:])\d+/i, `$1${i}`)
+            .replace(/(pagina:)\d+/i, `$1${i}`);
 
         nextPageUrls.push(nextPageUrl.toString());
     }
@@ -72,7 +99,7 @@ const parseTotalPagesCount = ($: CheerioRoot) : number => {
     const paginationPages = $(PAGINATION_PAGES_SEL).map((_i, el) => {
         const page = $(el).attr('data-number') || $(el).text() || '-1';
         return parseInt(page, 10);
-    });
+    }).toArray().filter(Number.isFinite);
 
-    return Math.max(...paginationPages);
+    return paginationPages.length > 0 ? Math.max(...paginationPages) : 1;
 };

@@ -18,13 +18,14 @@ export const categorizeUrls = (urls: string[]) : Request[] => {
     return categorizedRequests;
 };
 
-export const enqueueProductDetails = async (context: CheerioCrawlingContext) => {
+export const enqueueProductDetails = async (context: CheerioCrawlingContext, limit?: number) => {
     const { enqueueLinks, request: { url }, log } = context;
 
     const { processedRequests: reqs } = await enqueueLinks({
         selector: PRODUCT_LINKS_SEL,
         label: LABELS.DETAIL,
         forefront: true,
+        limit,
     });
 
     const enqueuedReqs = reqs.filter((req) => !req.wasAlreadyPresent);
@@ -32,9 +33,9 @@ export const enqueueProductDetails = async (context: CheerioCrawlingContext) => 
 };
 
 export const getCurrentPage = (url: string): number => {
-    const currentPageMatches = url.match(/\/(stranka|pagina)[/:](\d+)/) || [];
+    const currentPageMatches = url.match(/\/(stranka|strana|pagina)[/:](\d+)/) || [];
 
-    const currentPageText = currentPageMatches[1] || '1';
+    const currentPageText = currentPageMatches[2] || '1';
 
     return parseInt(currentPageText, 10);
 };

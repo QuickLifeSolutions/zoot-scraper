@@ -1,31 +1,93 @@
 {
-    "title": "CheerioCrawler Template",
+    "title": "Zoot Fashion Product Scraper",
     "type": "object",
     "schemaVersion": 1,
     "properties": {
         "startUrls": {
             "title": "Start URLs",
             "type": "array",
-            "description": "Enter URLs of product categories such as `'https://www.zoot.cz/katalog/17504/zeny'` or URLs of the individual products.",
+            "description": "Enter Zoot category or product URLs. The default is intentionally small so trial runs finish quickly.",
             "editor": "stringList",
             "prefill": [
-                "https://www.zoot.cz/katalog/17504/zeny",
-                "https://www.zoot.cz/katalog/17572/muzi",
-                "https://www.zoot.cz/vse-pro-deti"
+                "https://www.zoot.cz/katalog/17504/zeny"
+            ],
+            "default": [
+                "https://www.zoot.cz/katalog/17504/zeny"
             ]
         },
         "maxItems": {
             "title": "Max items",
             "type": "integer",
-            "description": "Set the maximum number of items you want to scrape. If you leave this field unset, the actor will extract all available items.",
-            "minimum": 0,
-            "prefill": 100,
+            "description": "Maximum number of product records to save. Keep this low for quick smoke tests.",
+            "minimum": 1,
+            "maximum": 10000,
+            "prefill": 25,
+            "default": 25,
             "unit": "items"
+        },
+        "maxRequestsPerCrawl": {
+            "title": "Max requests per crawl",
+            "type": "integer",
+            "description": "Hard safety limit for category, pagination, and detail requests. Prevents oversized default runs.",
+            "minimum": 1,
+            "maximum": 100000,
+            "prefill": 100,
+            "default": 100,
+            "unit": "requests"
+        },
+        "maxConcurrency": {
+            "title": "Max concurrency",
+            "type": "integer",
+            "description": "Maximum parallel requests. Lower values are gentler and reduce throttling risk.",
+            "minimum": 1,
+            "maximum": 10,
+            "prefill": 2,
+            "default": 2
+        },
+        "minRequestIntervalSecs": {
+            "title": "Minimum request delay",
+            "type": "number",
+            "description": "Minimum random delay before requests.",
+            "minimum": 0,
+            "maximum": 60,
+            "prefill": 0,
+            "default": 0,
+            "unit": "seconds"
+        },
+        "maxRequestIntervalSecs": {
+            "title": "Maximum request delay",
+            "type": "number",
+            "description": "Maximum random delay before requests. Must be greater than or equal to minimum request delay.",
+            "minimum": 0,
+            "maximum": 60,
+            "prefill": 1,
+            "default": 1,
+            "unit": "seconds"
+        },
+        "navigationTimeoutSecs": {
+            "title": "Navigation timeout",
+            "type": "integer",
+            "description": "Abort navigation if a response stalls longer than this.",
+            "minimum": 5,
+            "maximum": 300,
+            "prefill": 45,
+            "default": 45,
+            "unit": "seconds"
+        },
+        "requestHandlerTimeoutSecs": {
+            "title": "Request handler timeout",
+            "type": "integer",
+            "description": "Abort page handling if processing exceeds this limit.",
+            "minimum": 5,
+            "maximum": 300,
+            "prefill": 60,
+            "default": 60,
+            "unit": "seconds"
         },
         "proxyConfiguration": {
             "title": "Proxy Configuration",
             "type": "object",
-            "description": "Use either automatic Apify proxies or your own.",
+            "description": "Use Apify Proxy or your own proxy. Apify Proxy is recommended for Zoot.",
             "prefill": {
                 "useApifyProxy": true
             },
@@ -33,7 +95,7 @@
                 "useApifyProxy": true
             },
             "editor": "proxy",
-            "sectionCaption": "Advanced options (proxy configuration)"
+            "sectionCaption": "Advanced options"
         }
     }
 }

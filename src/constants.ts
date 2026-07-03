@@ -4,9 +4,9 @@ export const LABELS = {
     DETAIL: 'DETAIL',
 };
 
-export const PRODUCT_DETAIL_URL_REGEX = /\/(polozka|articol|detaliu)/i;
+export const PRODUCT_DETAIL_URL_REGEX = /\/(polozka|detail-vyrobku|articol|detaliu)/i;
 
-const CZ_SK_PRODUCT_LINKS_SEL = 'h3.b-product__title a[href^="/polozka"]';
+const CZ_SK_PRODUCT_LINKS_SEL = 'h3.b-product__title a[href] , a[href*="/polozka/"] , a[href*="/detail-vyrobku/"]';
 const RO_PRODUCT_LINKS_SEL = '.product__link[href]';
 
 export const PRODUCT_LINKS_SEL = [
@@ -14,7 +14,10 @@ export const PRODUCT_LINKS_SEL = [
     RO_PRODUCT_LINKS_SEL,
 ].join(' , ');
 
-const CZ_SK_PAGINATION_PAGES_SEL = '.pagination__item [href][data-number][data-test^="pagination__page"]';
+const CZ_SK_PAGINATION_PAGES_SEL = [
+    '.pagination__item [href][data-number][data-test^="pagination__page"]',
+    '.pagination__item[href][data-number][data-test^="pagination__page"]',
+].join(' , ');
 const RO_PAGINATION_PAGES_SEL = '.pagination__jump[href]';
 
 export const PAGINATION_PAGES_SEL = [
@@ -22,8 +25,8 @@ export const PAGINATION_PAGES_SEL = [
     RO_PAGINATION_PAGES_SEL,
 ].join(' , ');
 
-const CZ_SK_PRICE_CURRENCY_SEL = '#buyWidget [itemprop="priceCurrency"][content]';
-const RO_PRICE_CURRENCY_SEL = '.product__price s';
+const CZ_SK_PRICE_CURRENCY_SEL = '#buyWidget [itemprop="priceCurrency"][content] , [itemprop="priceCurrency"][content]';
+const RO_PRICE_CURRENCY_SEL = '.product__price s , [itemprop="priceCurrency"][content]';
 
 export const PRICE_CURRENCY_SEL = [
     CZ_SK_PRICE_CURRENCY_SEL,
@@ -78,7 +81,7 @@ export const DESCRIPTION_SEL = '[data-read-more-target="content"] p';
 export const CZ_SK_ATTRIBUTES_SEL = '[data-read-more-target="content"]';
 export const RO_ATTRIBUTES_SEL = '#tab-description ul li';
 
-const CZ_SK_SIZES_SEL = '[data-rich-select] select option:not([data-placeholder="true"])';
+const CZ_SK_SIZES_SEL = '[data-rich-select] select option:not([data-placeholder="true"]) , select[data-rich-select] option:not([data-placeholder="true"])';
 const RO_SIZES_SEL = '.product-detail__size-select select option:not(.select__prompt)';
 
 export const SIZES_SEL = [
@@ -86,7 +89,7 @@ export const SIZES_SEL = [
     RO_SIZES_SEL,
 ].join(' , ');
 
-const CZ_SK_BRAND_SEL = '[data-test="dealDetail__brandLogo"] [href]';
+const CZ_SK_BRAND_SEL = '[data-test="dealDetail__brandLogo"] [href] , [data-test="dealDetail__brandLogo"][href]';
 const RO_BRAND_SEL = '.product-detail__brand[href]';
 
 export const BRAND_SEL = [
