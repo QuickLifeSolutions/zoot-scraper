@@ -48,7 +48,7 @@ For a very small smoke test:
 |---|---|---:|---|
 | `startUrls` | string[] | one CZ women category | Category or product detail URLs. |
 | `maxItems` | integer | `25` | Maximum product records to save. |
-| `maxRequestsPerCrawl` | integer | `100` | Hard request budget for category, pagination, and detail requests. |
+| `maxRequestsPerCrawl` | integer | `max(100, maxItems * 4)` | Hard request budget for category, pagination, and detail requests, derived in `src/config.ts` when not provided. |
 | `maxConcurrency` | integer | `2` | Maximum parallel requests. |
 | `minRequestIntervalSecs` | number | `0` | Minimum random delay before requests. |
 | `maxRequestIntervalSecs` | number | `1` | Maximum random delay before requests. |

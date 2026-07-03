@@ -18,8 +18,8 @@ Smoke-test run: `8OIvi3YeUFgfeGauH`
   - `notice: UNDER_MAINTENANCE`
   - last 30 days: `23 SUCCEEDED`, `6 TIMED-OUT`, `29 TOTAL`.
   - timeout rate: ~`20.7%` over the last 30 days.
-- Build and lint currently pass locally.
-- `npm test` is intentionally failing because the repo has no tests: `echo "Error: oops, the actor has no tests yet, sad!" && exit 1`.
+- Build, lint, and regression tests pass locally.
+- `npm test` now runs the product parser and crawl-budget regression suite.
 - Independent subagent code review confirmed the same root cause pattern: unsafe defaults + queue explosion before `maxItems` enforcement + stale output selectors.
 
 ## In-depth review findings
@@ -304,6 +304,6 @@ npx --yes apify-cli call dainty_screw/easy-zoot-data-scraper --input-file /tmp/z
 - [ ] README and input schema match actual behavior.
 - [ ] No secrets or dangerous code patterns introduced.
 
-## Do not implement until user approval
+## Historical implementation note
 
-No code fixes have been applied yet. This document is the review and proposed plan only.
+This document captures the pre-fix investigation and approved remediation plan. The fixes, regression tests, and smoke-test evidence are now part of this branch.

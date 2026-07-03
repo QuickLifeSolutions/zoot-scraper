@@ -234,11 +234,15 @@ const parseSizeLabel = (sizeWithNote: string): { size: string; note: string } =>
 const parsePriceValue = (priceText: string): number | null => {
     let valueText = (priceText || '').replace(/[^\d,.]/g, '');
 
-    const replaceCommaWith = valueText.includes(',') && !valueText.includes('.')
-        ? '.'
-        : '';
-
-    valueText = valueText.replace(/,/g, replaceCommaWith);
+    if (valueText.includes(',') && valueText.includes('.')) {
+        const lastCommaIndex = valueText.lastIndexOf(',');
+        const lastDotIndex = valueText.lastIndexOf('.');
+        valueText = lastCommaIndex > lastDotIndex
+            ? valueText.replace(/\./g, '').replace(/,/g, '.')
+            : valueText.replace(/,/g, '');
+    } else if (valueText.includes(',')) {
+        valueText = valueText.replace(/,/g, '.');
+    }
 
     return valueText ? parseFloat(valueText) : null;
 };

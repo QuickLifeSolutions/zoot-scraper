@@ -55,6 +55,19 @@ const load = (html: string) => cheerio.load(html);
 
 {
     const $ = load(`
+        <html><body>
+            <span class="product-detail__price">1.234,56 lei</span>
+        </body></html>
+    `);
+
+    assert.deepEqual(parseCurrentPrice($, 'https://www.zoot.ro/detaliu/1/example'), {
+        value: 1234.56,
+        formattedPrice: '1 234.56 lei',
+    });
+}
+
+{
+    const $ = load(`
         <div data-read-more-target="content">
             <p>Comfortable jacket for spring.</p>
             <strong>Material:</strong> 100% cotton<br>
@@ -99,5 +112,3 @@ const load = (html: string) => cheerio.load(html);
         name: 'GAP',
     });
 }
-
-console.log('product parser tests passed');
